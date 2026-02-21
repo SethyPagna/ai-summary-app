@@ -203,7 +203,7 @@ export default function Settings({ darkMode, onToggleDark, readability, onReadab
         </div>
         <div className="setting-row">
           <div className="setting-info"><div className="setting-label">Storage</div></div>
-          <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Supabase (app-files)</span>
+          <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>Supabase</span>
         </div>
       </div>
     </div>

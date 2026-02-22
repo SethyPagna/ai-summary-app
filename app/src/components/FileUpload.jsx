@@ -8,7 +8,6 @@ import { useAuth } from '../hooks/useAuth';
 const FILE_ICONS = {
   pdf:  { icon: '📄', cls: 'file-type-pdf' },
   docx: { icon: '📝', cls: 'file-type-docx' },
-  doc:  { icon: '📝', cls: 'file-type-docx' },
   pptx: { icon: '📊', cls: 'file-type-pptx' },
   txt:  { icon: '📃', cls: 'file-type-txt' },
 };
@@ -157,7 +156,7 @@ export default function FileUpload({ projectId, onDocumentAdded, modelId }) {
           ref={inputRef}
           type="file"
           multiple
-          accept=".pdf,.doc,.docx,.pptx,.txt"
+          accept=".pdf,.docx,.pptx,.txt"
           style={{ display: 'none' }}
           onChange={(e) => { addFiles(e.target.files); e.target.value = ''; }}
         />

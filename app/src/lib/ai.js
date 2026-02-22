@@ -1,6 +1,14 @@
 // ─── OpenRouter Configuration ───────────────────────────────────────────────
 const OR_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const OR_API_KEY = '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';
+
+// Read from Vite environment variable
+const OR_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
+
+if (!OR_API_KEY) {
+  throw new Error(
+    'Missing OpenRouter API key. Set VITE_OPENROUTER_API_KEY in your .env file.'
+  );
+}
 
 export const MODELS = [
   {
@@ -47,7 +55,6 @@ export const MODELS = [
   },
 ];
 
-
 export const DEFAULT_MODEL = MODELS[0].id;
 
 // ─── Core fetch wrapper ──────────────────────────────────────────────────────
@@ -77,12 +84,14 @@ async function callOpenRouter(messages, systemPrompt, modelId) {
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
     throw new Error(
-      err?.error?.message || `OpenRouter error ${response.status}: ${response.statusText}`
+      err?.error?.message ||
+        `OpenRouter error ${response.status}: ${response.statusText}`
     );
   }
 
   const data = await response.json();
   const text = data.choices?.[0]?.message?.content || '';
+
   if (!text) throw new Error('Empty response from model.');
   return text;
 }
@@ -93,7 +102,13 @@ export async function summarizeDocument(content, modelId) {
     [
       {
         role: 'user',
-        content: `Please provide a comprehensive summary of the following document.\n\nUse clear headings (##), bullet points, and highlight key insights. Be thorough but concise.\n\n---\n${content}\n---`,
+        content: `Please provide a comprehensive summary of the following document.
+
+Use clear headings (##), bullet points, and highlight key insights. Be thorough but concise.
+
+---
+${content}
+---`,
       },
     ],
     'You are an expert document analyst. Produce structured, insightful summaries.',
@@ -109,7 +124,6 @@ Documents:
 ${documentsContext}`;
 
   const openRouterMsgs = messages.map((m) => ({
-    // DB stores 'ai', OpenRouter requires 'assistant'
     role: m.role === 'user' ? 'user' : 'assistant',
     content: m.text,
   }));
@@ -132,16 +146,18 @@ Return format: ["question 1", "question 2", "question 3"]`;
       'You generate follow-up questions. Return only valid JSON arrays.',
       modelId
     );
+
     const cleaned = raw.replace(/```json|```/g, '').trim();
     const parsed = JSON.parse(cleaned);
     if (Array.isArray(parsed)) return parsed.slice(0, 3);
   } catch {
-    // Suggestions are non-critical — fail silently
+    // non-critical
   }
+
   return [];
 }
 
-// ─── Static starter suggestions ─────────────────────────────────────────────
+// ─── Starter Suggestions ────────────────────────────────────────────────────
 export const STARTER_SUGGESTIONS = [
   'What are the main topics covered?',
   'Summarize the key findings.',

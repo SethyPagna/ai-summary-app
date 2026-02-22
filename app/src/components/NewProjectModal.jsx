@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useToast } from '../hooks/useToast';
+import { useAuth } from '../hooks/useAuth';
 
-export default function NewProjectModal({ userId, onClose, onCreated }) {
+export default function NewProjectModal({ onClose, onCreated }) {
+  const { user } = useAuth();
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const toast = useToast();
@@ -10,12 +12,17 @@ export default function NewProjectModal({ userId, onClose, onCreated }) {
   async function handleCreate(e) {
     e.preventDefault();
     if (!name.trim()) return;
+
+    if (!user) {
+      toast('You must be logged in to create a project.', 'error');
+      return;
+    }
+
     setLoading(true);
 
     try {
       const { data, error } = await supabase
         .from('projects')
-        // .insert({ user_id: userId, name: name.trim() })
         .insert({
           name: name.trim(),
           user_id: user.id
@@ -24,6 +31,7 @@ export default function NewProjectModal({ userId, onClose, onCreated }) {
         .single();
 
       if (error) throw error;
+
       toast(`Project "${name}" created!`, 'success');
       onCreated(data);
     } catch (err) {

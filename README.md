@@ -86,3 +86,4 @@ web/src/
 ## v1 (February 2026)
 
 The original course project — React 18 + Vite with Supabase auth/storage and OpenRouter models — is preserved in [`app/`](app/). It needs a Supabase project and API keys to run; v2 replaces it with a self-contained, key-optional design.
+The original course brief is in [`COURSE.md`](COURSE.md), with the tasks in [`task1.md`](task1.md) and [`task2.md`](task2.md).

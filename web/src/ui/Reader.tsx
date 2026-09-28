@@ -1,7 +1,7 @@
 import { Fragment, useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import type { Block } from '../engine/types';
 import { escapeRegExp } from '../engine/text';
-import { app, getNotes, navigate, saveNotes, setKeyphrase, setReaderScale, toast, useApp, type LoadedDoc } from '../store/app';
+import { app, getNotes, navigate, saveNotes, setKeyphrase, setReaderScale, setSourceHidden, toast, useApp, type LoadedDoc } from '../store/app';
 import { uid, type Highlight } from '../store/db';
 import { Icon, kindLabel } from './common';
 
@@ -276,9 +276,13 @@ export function Reader({ doc, sheet }: { doc: LoadedDoc; sheet?: boolean }) {
               A+
             </button>
           </div>
-          {sheet && (
+          {sheet ? (
             <button type="button" className="icon-btn" onClick={() => app.set({ readerOpen: false })} aria-label="Close source">
               <Icon name="close" />
+            </button>
+          ) : (
+            <button type="button" className="icon-btn" onClick={() => setSourceHidden(true)} aria-label="Hide source (focus mode)" title="Hide source">
+              <Icon name="sidebar" />
             </button>
           )}
         </div>
@@ -306,7 +310,7 @@ export function Reader({ doc, sheet }: { doc: LoadedDoc; sheet?: boolean }) {
           )}
         </div>
       )}
-      <div className="reader-scroll" ref={scrollRef} onMouseUp={onSelect} onKeyUp={onSelect} onScroll={() => sel && setSel(null)}>
+      <div className="reader-scroll" ref={scrollRef} tabIndex={0} role="region" aria-label={`Text of ${meta.title}`} onMouseUp={onSelect} onKeyUp={onSelect} onScroll={() => sel && setSel(null)}>
         <article className="page">
           <h1 className="page-title">{meta.title}</h1>
           {blocks.map((b, i) => {

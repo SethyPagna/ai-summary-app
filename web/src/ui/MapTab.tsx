@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react';
 import type { OutlineNode } from '../engine/types';
-import { app, setKeyphrase, type LoadedDoc } from '../store/app';
+import { focusPassage, setKeyphrase, type LoadedDoc } from '../store/app';
 import { sentenceTarget } from './cite';
 
 const CHAR = 7.1; // approx. width of a 13px UI glyph
@@ -102,7 +102,7 @@ export function MapTab({ doc }: { doc: LoadedDoc }) {
 
   const openSentence = (si: number) => {
     const t = sentenceTarget(meta.id, a, doc.blocks, si);
-    if (t) app.set({ focus: { ...t, nonce: Date.now() }, readerOpen: true, keyphrase: null });
+    if (t) focusPassage(t);
   };
   const act = (n: OutlineNode) => (n.kind === 'phrase' ? setKeyphrase(n.label) : n.sentence >= 0 && openSentence(n.sentence));
   const keyAct = (n: OutlineNode) => (e: KeyboardEvent) => {
@@ -126,7 +126,7 @@ export function MapTab({ doc }: { doc: LoadedDoc }) {
           : 'No headings found, so the map groups the top key phrases with the phrases that appear near them.'}
       </p>
       <div className="map-scroll" ref={wrapRef}>
-        <svg className="mindmap" viewBox={box.join(' ')} style={{ minWidth: width < 540 ? Math.min(box[2], 560) : undefined }} role="img" aria-label={`Mind map of ${meta.title}`}>
+        <svg className="mindmap" viewBox={box.join(' ')} style={{ minWidth: width < 540 ? Math.min(box[2], 560) : undefined }} role="group" aria-label={`Mind map of ${meta.title}`}>
           {branchesPlaced.map((b) => (
             <path key={`l-${b.node.id}`} className={`link c${b.color}`} d={curve(b.side * (rootW / 2), 0, b.x, b.y)} />
           ))}

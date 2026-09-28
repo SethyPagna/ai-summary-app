@@ -62,6 +62,10 @@ export interface AppState {
   readerOpen: boolean;
   dataVersion: number;
   activeProject: string;
+  /** Desktop focus mode: the source column is collapsed. */
+  sourceHidden: boolean;
+  /** Doc freshly opened via "Try a sample": pre-highlight its suggested answer. */
+  autoCite: string | null;
   /** A question handed to the Ask tab from elsewhere (reader selection, suggestions). */
   pendingAsk: { text: string; mode: 'local' | 'claude'; docId: string; send?: boolean } | null;
 }
@@ -118,6 +122,8 @@ export const app = createStore<AppState>({
   dataVersion: 0,
   activeProject: 'all',
   pendingAsk: null,
+  autoCite: null,
+  sourceHidden: false,
 });
 
 export function useApp<R>(select: (s: AppState) => R): R {
@@ -144,6 +150,7 @@ export async function init() {
     model: pref<ModelId>('ais2.model', DEFAULT_MODEL),
     sendPdf: pref('ais2.sendPdf', true),
     readerScale: pref('ais2.readerScale', 1),
+    sourceHidden: pref('ais2.sourceHidden', false),
     route: parseHash(location.hash),
   });
   applyTheme(theme);
@@ -236,7 +243,14 @@ export function saveKey(key: string, remember: boolean) {
   app.set({ keySet: !!key.trim(), keyRemembered: remember && !!key.trim() });
 }
 
+export function setSourceHidden(sourceHidden: boolean) {
+  app.set({ sourceHidden });
+  savePref('ais2.sourceHidden', sourceHidden);
+}
+
 export function focusPassage(f: Omit<Focus, 'nonce'>) {
+  // Showing a citation always brings the source back into view.
+  if (app.get().sourceHidden) setSourceHidden(false);
   app.set({ focus: { ...f, nonce: Date.now() }, readerOpen: true, keyphrase: null });
   const r = app.get().route;
   if (r.name !== 'doc' || r.docId !== f.docId) {
@@ -245,6 +259,7 @@ export function focusPassage(f: Omit<Focus, 'nonce'>) {
 }
 
 export function setKeyphrase(k: string | null) {
+  if (k && app.get().sourceHidden) setSourceHidden(false);
   app.set({ keyphrase: k, readerOpen: k ? true : app.get().readerOpen });
 }
 
@@ -432,6 +447,7 @@ export async function loadSample(sampleId = SAMPLES[0]!.id): Promise<string | nu
     );
     updateUpload(item.id, { stage: 'done', progress: 1, docId: id });
     setTimeout(dismissUploads, 1800);
+    app.set({ autoCite: id });
     openDoc(id);
     return id;
   } catch (e) {

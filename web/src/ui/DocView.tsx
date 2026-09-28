@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { DOC_TABS, type DocTab } from '../store/store';
-import { app, deleteDoc, moveDoc, navigate, renameDoc, toast, useApp, useDoc, type LoadedDoc } from '../store/app';
+import { app, deleteDoc, moveDoc, navigate, renameDoc, setSourceHidden, toast, useApp, useDoc, type LoadedDoc } from '../store/app';
 import { Icon, kindLabel, Spinner } from './common';
 import { Reader } from './Reader';
 import { BriefTab } from './BriefTab';
@@ -15,6 +15,7 @@ const TAB_LABELS: Record<DocTab, string> = { brief: 'Brief', ask: 'Ask', study: 
 export function DocView({ docId, tab, other }: { docId: string; tab: DocTab; other?: string }) {
   const { data, error } = useDoc(docId);
   const readerOpen = useApp((s) => s.readerOpen);
+  const sourceHidden = useApp((s) => s.sourceHidden);
   const [wide, setWide] = useState(() => matchMedia('(min-width: 1080px)').matches);
   useEffect(() => {
     const mq = matchMedia('(min-width: 1080px)');
@@ -48,7 +49,7 @@ export function DocView({ docId, tab, other }: { docId: string; tab: DocTab; oth
   }
 
   return (
-    <div className="docview">
+    <div className={`docview${wide && sourceHidden ? ' is-focus' : ''}`}>
       <div className="doc-main">
         <DocHeader doc={data} />
         <nav className="tabs" role="tablist" aria-label="Document views">
@@ -73,6 +74,12 @@ export function DocView({ docId, tab, other }: { docId: string; tab: DocTab; oth
               Source
             </button>
           )}
+          {wide && sourceHidden && (
+            <button type="button" className="tab tab-source" onClick={() => setSourceHidden(false)} title="Show the source document">
+              <Icon name="book" size={15} />
+              Show source
+            </button>
+          )}
         </nav>
         <div className="tab-panel" role="tabpanel" id={`panel-${activeTab}`} aria-labelledby={`tab-${activeTab}`}>
           {activeTab === 'brief' || activeTab === 'source' ? <BriefTab doc={data} /> : null}
@@ -83,9 +90,11 @@ export function DocView({ docId, tab, other }: { docId: string; tab: DocTab; oth
         </div>
       </div>
       {wide ? (
-        <div className="doc-reader">
-          <Reader doc={data} />
-        </div>
+        !sourceHidden && (
+          <div className="doc-reader">
+            <Reader doc={data} />
+          </div>
+        )
       ) : (
         readerOpen && (
           <div className="sheet-backdrop" onClick={(e) => e.target === e.currentTarget && app.set({ readerOpen: false })}>

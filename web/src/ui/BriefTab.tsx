@@ -3,7 +3,7 @@ import { answerQuestion, buildQaIndex } from '../engine/qa';
 import { libraryRerank } from '../engine/keyphrases';
 import type { EntityType } from '../engine/types';
 import { sampleById } from '../samples/manifest';
-import { app, getNotes, libraryDocFreq, navigate, saveNotes, setKeyphrase, useApp, type LoadedDoc } from '../store/app';
+import { app, focusPassage, getNotes, libraryDocFreq, navigate, saveNotes, setKeyphrase, useApp, type LoadedDoc } from '../store/app';
 import type { NotesRecord, SavedAi } from '../store/db';
 import { AiFootnote, AiStatus, AiText, NeedKey, useClaude } from './ai';
 import { CiteChip, Icon } from './common';
@@ -28,6 +28,17 @@ export function BriefTab({ doc }: { doc: LoadedDoc }) {
   const answer = useMemo(() => answerQuestion(question, buildQaIndex([{ docId: meta.id, title: meta.title, analysis: a }])), [question, meta.id, meta.title, a]);
 
   const target = (si: number) => sentenceTarget(meta.id, a, blocks, si);
+
+  // First visit to a sample: show where the suggested answer comes from.
+  const autoCite = useApp((s) => s.autoCite);
+  useEffect(() => {
+    if (autoCite !== meta.id) return;
+    app.set({ autoCite: null });
+    const first = answer.sentences[0];
+    if (!first || !matchMedia('(min-width: 1080px)').matches) return;
+    const t = sentenceTarget(first.docId, a, blocks, first.sentence);
+    if (t) app.set({ focus: { ...t, nonce: Date.now() } });
+  }, [autoCite, meta.id, answer, a, blocks]);
   const summaryIds = len === 'short' ? a.summary.short : a.summary.detailed;
 
   return (
@@ -36,7 +47,7 @@ export function BriefTab({ doc }: { doc: LoadedDoc }) {
         <h2 id="tldr-h" className="kicker">
           TL;DR <span className="kicker-note">TextRank · most central sentence{a.summary.tldr.length > 1 ? 's' : ''}</span>
         </h2>
-        <blockquote className="pull">
+        <blockquote className={`pull${a.summary.tldr.reduce((n, i) => n + (a.sentences[i]?.text.length ?? 0), 0) > 170 ? ' is-long' : ''}`}>
           {a.summary.tldr.map((i) => (
             <span key={i}>
               {a.sentences[i]?.text} <CiteChip target={target(i)} />{' '}
@@ -204,7 +215,7 @@ function Entities({ doc }: { doc: LoadedDoc }) {
                       <button
                         type="button"
                         className={`entity entity-${e.type}`}
-                        onClick={() => t && app.set({ focus: { ...t, nonce: Date.now() }, readerOpen: true, keyphrase: null })}
+                        onClick={() => t && focusPassage(t)}
                         title={t ? `First mention: ${t.label}` : undefined}
                       >
                         {e.text}
@@ -349,7 +360,7 @@ function Notes({ doc }: { doc: LoadedDoc }) {
                 <button
                   type="button"
                   className="hl-quote"
-                  onClick={() => app.set({ focus: { docId: meta.id, ranges: [{ blockId: h.blockId, start: h.start, end: h.end }], label: 'highlight', quote: h.text, nonce: Date.now() }, readerOpen: true })}
+                  onClick={() => focusPassage({ docId: meta.id, ranges: [{ blockId: h.blockId, start: h.start, end: h.end }], label: 'highlight', quote: h.text })}
                 >
                   “{h.text.trim()}”
                 </button>

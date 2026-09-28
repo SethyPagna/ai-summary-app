@@ -927,7 +927,8 @@ a {
   top: 14px;
   right: 16px;
   font: italic 500 30px/1 var(--f-display);
-  color: var(--rule-strong);
+  color: var(--ink-3);
+  opacity: 0.9;
 }
 .sample-blurb {
   font: 400 15.5px/1.45 var(--f-read);
@@ -997,6 +998,14 @@ a {
 .doc-main {
   min-width: 0;
   padding: 30px clamp(18px, 3vw, 40px) 90px;
+}
+.docview.is-focus {
+  grid-template-columns: minmax(0, 1fr);
+}
+.docview.is-focus .doc-main {
+  max-width: 1120px;
+  width: 100%;
+  margin: 0 auto;
 }
 .doc-reader {
   position: sticky;
@@ -1130,6 +1139,10 @@ a {
   color: var(--ink);
   font-variation-settings: 'SOFT' 100;
 }
+.pull.is-long {
+  font-size: clamp(19px, 1.65vw, 22px);
+  line-height: 1.42;
+}
 .pull::before {
   content: '“';
   position: absolute;
@@ -1175,6 +1188,9 @@ a {
   border-color: var(--rule-strong);
   background: var(--surface-2);
   box-shadow: none;
+}
+.claude-card [aria-live] > :first-child {
+  margin-top: 16px;
 }
 .claude-card .kicker svg {
   color: var(--accent);
@@ -2184,6 +2200,9 @@ button.cite:focus-visible {
   font-size: 13px;
   background: var(--marker-2);
   border-bottom: 1px solid var(--rule);
+}
+.reader-scroll:focus-visible {
+  outline-offset: -3px;
 }
 .reader-scroll {
   flex: 1;

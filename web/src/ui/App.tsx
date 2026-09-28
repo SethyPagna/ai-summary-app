@@ -1,12 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { DOC_TABS } from '../store/store';
 import { ACCEPT, app, ingestFiles, loadSample, navigate, setDialog, toggleTheme, useApp } from '../store/app';
 import { Brand, Sidebar } from './Sidebar';
 import { Home } from './Home';
-import { DocView } from './DocView';
 import { Dialogs } from './Dialogs';
 import { UploadTray } from './UploadTray';
 import { Icon, Spinner } from './common';
+
+// The document workspace (tabs, reader, study tools) loads on first use.
+const DocView = lazy(() => import('./DocView').then((m) => ({ default: m.DocView })));
 
 function isTyping(e: KeyboardEvent): boolean {
   const t = e.target as HTMLElement | null;
@@ -154,7 +156,15 @@ export function App() {
               <Spinner label="Opening your library…" />
             </div>
           ) : route.name === 'doc' ? (
-            <DocView key={route.docId} docId={route.docId} tab={route.tab} other={route.other} />
+            <Suspense
+              fallback={
+                <div className="empty-state">
+                  <Spinner label="Opening document…" />
+                </div>
+              }
+            >
+              <DocView key={route.docId} docId={route.docId} tab={route.tab} other={route.other} />
+            </Suspense>
           ) : (
             <Home onUpload={openPicker} onFiles={(f) => void ingestFiles(f)} />
           )}

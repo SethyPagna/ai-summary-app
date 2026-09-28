@@ -55,7 +55,16 @@ export function StudyTab({ doc }: { doc: LoadedDoc }) {
 
 function clozeFront(front: string): ReactNode[] {
   const parts = front.split('_____');
-  return parts.flatMap((p, i) => (i < parts.length - 1 ? [p, <span key={i} className="blank" aria-label="blank" />] : [p]));
+  return parts.flatMap((p, i) =>
+    i < parts.length - 1
+      ? [
+          p,
+          <span key={i} className="blank">
+            <span className="sr-only">blank</span>
+          </span>,
+        ]
+      : [p],
+  );
 }
 
 function highlightAnswer(context: string, answer: string): ReactNode[] {

@@ -292,8 +292,11 @@ export function answerQuestion(question: string, index: QaIndex, maxSentences = 
   // Weighted by IDF so that matching only a vague word ("help") is not enough.
   const coverageW = original.filter((o) => coveredAll.has(o.term)).reduce((a, o) => a + idfOf(o), 0) / totalOriginalWeight;
   if (coverage === 0 || (original.length >= 2 && coverageW < 0.5 && idfStrength < 4) || (original.length >= 3 && coverage < 0.34)) {
+    const found = original.filter((o) => coveredAll.has(o.term));
+    const nf = notFound(question, original.filter((o) => !coveredAll.has(o.term)));
     return {
-      ...notFound(question, original),
+      ...nf,
+      message: found.length ? `The text mentions ${quoteList(found)}, but nothing about ${quoteList(original.filter((o) => !coveredAll.has(o.term)), 'or')} — so it can’t answer this.` : nf.message,
       related: chosen.slice(0, 2).map((c) => relatedOf(index, c.source, c.sentence)),
     };
   }
@@ -343,8 +346,13 @@ function surfacesFor(orig: WeightedTerm[], query: WeightedTerm[], covered: Set<s
   return [...s];
 }
 
-function notFound(question: string, original: WeightedTerm[]): QaAnswer {
-  const what = original.map((o) => `“${o.surface}”`).join(', ');
+function quoteList(ts: WeightedTerm[], joiner = 'and'): string {
+  const q = ts.map((t) => `“${t.surface}”`);
+  return q.length <= 1 ? (q[0] ?? '') : `${q.slice(0, -1).join(', ')} ${joiner} ${q[q.length - 1]}`;
+}
+
+function notFound(_question: string, original: WeightedTerm[]): QaAnswer {
+  const what = quoteList(original, 'or');
   return {
     kind: 'not_found',
     confidence: 'low',
@@ -353,7 +361,7 @@ function notFound(question: string, original: WeightedTerm[]): QaAnswer {
     missingTerms: original.map((o) => o.surface),
     related: [],
     message: what
-      ? `I couldn’t find anything about ${what} in the selected source${question.length ? '' : ''}. Try different wording, or widen the scope.`
+      ? `I couldn’t find anything about ${what} in the searched text. Try different wording, or widen the scope.`
       : 'I couldn’t find a relevant passage for that question.',
   };
 }

@@ -1,0 +1,41 @@
+{
+  "name": "ai-summary-web",
+  "private": true,
+  "version": "2.0.0",
+  "type": "module",
+  "description": "AI Summary v2 — private, in-browser document intelligence with optional Claude mode.",
+  "scripts": {
+    "dev": "vite --port 5302 --strictPort",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --port 8812 --strictPort",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "samples": "node scripts/make-samples.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
+    "@fontsource-variable/fraunces": "^5.3.0",
+    "@fontsource-variable/newsreader": "^5.3.0",
+    "@fontsource-variable/schibsted-grotesk": "^5.3.0",
+    "@fontsource/ibm-plex-mono": "^5.3.0",
+    "jszip": "^3.10.2",
+    "mammoth": "^1.13.0",
+    "pdfjs-dist": "^6.3.289",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "docx": "^9.8.0",
+    "pdf-lib": "^1.17.1",
+    "pptxgenjs": "^4.0.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.1",
+    "vitest": "^5.0.2"
+  },
+  "overrides": {
+    "image-size": "^2.0.3"
+  }
+}
